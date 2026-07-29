@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WB Money Sync 🔄</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --success: #10b981;
+            --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --warning: #f59e0b;
+            --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --danger: #ef4444;
+            --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --info: #3b82f6;
+            --purple: #a855f7;
+            --ktc-color: #ec4899;
+            --krungsri-color: #eab308;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #818cf8, #34d399, #facc15);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .actions-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary { background: var(--primary-gradient); border: none; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
+        .btn-success { background: var(--success-gradient); border: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
+
+        /* 3-Pillar Filter Bar (Feature #5) */
+        .pillar-filter-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            backdrop-filter: blur(12px);
+        }
+
+        .pillar-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-right: 0.5rem;
+        }
+
+        .pillar-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .pillar-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .pillar-btn-ktc.active {
+            background: var(--ktc-color);
+            border-color: var(--ktc-color);
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.4);
+        }
+
+        .pillar-btn-krungsri.active {
+            background: var(--krungsri-color);
+            color: #0f172a;
+            font-weight: 600;
+            border-color: var(--krungsri-color);
+            box-shadow: 0 2px 8px rgba(234, 179, 8, 0.4);
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.2rem;
+            backdrop-filter: blur(16px);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .kpi-card:hover { transform: translateY(-3px); }
+
+        .kpi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 4px 0 0 4px;
+        }
+
+        .kpi-income::before { background: #10b981; }
+        .kpi-net::before { background: #3b82f6; }
+        .kpi-expense::before { background: #f59e0b; }
+        .kpi-dti::before { background: #ec4899; }
+        .kpi-buffer::before { background: #a855f7; }
+
+        .kpi-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;
+        }
+
+        .kpi-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
+        .kpi-icon {
+            width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: rgba(255, 255, 255, 0.05);
+        }
+        .kpi-value { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+        .kpi-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+        /* Due Date Alert Cards Row (Feature #2) */
+        .alerts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-card {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(12px);
+        }
+
+        .alert-card-ktc { border-left: 4px solid var(--ktc-color); }
+        .alert-card-krungsri { border-left: 4px solid var(--krungsri-color); }
+
+        .alert-info h4 { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
+        .alert-info p { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+        .alert-due { text-align: right; }
+        .alert-days { font-size: 1.1rem; font-weight: 700; color: #f472b6; }
+        .alert-amount { font-size: 0.85rem; color: var(--text-main); font-weight: 600; }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+
+        @media (max-width: 1024px) { .col-8, .col-6, .col-4 { grid-column: span 12; } }
+
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .chart-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+        .chart-container { position: relative; height: 260px; width: 100%; }
+
+        /* Budget vs Actual Progress Bars (Feature #1) */
+        .progress-item { margin-bottom: 0.85rem; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem; }
+        .progress-bar-bg { background: rgba(15, 23, 42, 0.6); border-radius: 10px; height: 10px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease; }
+
+        /* Data Table Section */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .table-toolbar {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;
+        }
+
+        .search-box input, .select-box select {
+            background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); color: var(--text-main); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; outline: none;
+        }
+
+        .table-wrapper { overflow-x: auto; border-radius: 10px; border: 1px solid var(--card-border); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+        th { background: rgba(15, 23, 42, 0.85); color: var(--text-muted); font-weight: 600; padding: 0.8rem 1rem; border-bottom: 1px solid var(--card-border); white-space: nowrap; }
+        td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.04); color: var(--text-main); white-space: nowrap; }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        .badge { padding: 0.25rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500; display: inline-block; }
+        .badge-income { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .badge-deduction { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge-expense { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .badge-saving { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+
+        .badge-ktc { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .badge-krungsri { background: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .badge-payroll { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .badge-cash { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+        .badge-fixed { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-variable { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        /* Modal styling */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: #1e293b; border: 1px solid var(--card-border); border-radius: 16px; width: 90%; max-width: 500px; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; }
+        .form-group input, .form-group select { width: 100%; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--card-border); color: var(--text-main); padding: 0.6rem; border-radius: 8px; font-size: 0.9rem; }
+
+        .toast { position: fixed; bottom: 20px; right: 20px; background: var(--success); color: #fff; padding: 0.75rem 1.25rem; border-radius: 10px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); display: none; z-index: 2000; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="header-title">
+            <h1>WB Money Sync 🔄</h1>
+            <p>ประมาณการและบริหารจัดการรายจ่ายตามโครงสร้าง 3 เสาหลัก (Enhanced 6 Features)</p>
+        </div>
+        <div class="actions-group">
+            <button class="btn btn-primary" onclick="openAddModal()">➕ เพิ่มรายการใหม่</button>
+            <button class="btn btn-success" onclick="exportCSV()">📥 Export CSV (Google Sheets)</button>
+            <button class="btn" onclick="document.getElementById('csvFileInput').click()">📤 Import CSV</button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
+        </div>
+    </header>
+
+    <!-- Feature #5: Interactive 3-Pillar Filter Bar -->
+    <div class="pillar-filter-bar">
+        <span class="pillar-title">🏛️ กรองข้อมูลตาม 3 เสาหลัก:</span>
+        <button class="pillar-btn active" id="btnPillarAll" onclick="selectPillar('ALL')">🌐 แสดงภาพรวมทั้งหมด</button>
+        <button class="pillar-btn" id="btnPillar1" onclick="selectPillar('MONTHLY')">🟢 เสาที่ 1: รายจ่ายประจำเดือน</button>
+        <button class="pillar-btn pillar-btn-ktc" id="btnPillar2" onclick="selectPillar('KTC')">🟣 เสาที่ 2: หนี้บัตร KTC</button>
+        <button class="pillar-btn pillar-btn-krungsri" id="btnPillar3" onclick="selectPillar('KRUNGSRI')">🟡 เสาที่ 3: หนี้บัตรกรุงศรี</button>
+    </div>
+
+    <!-- Feature #2: Credit Card Due Date & Alert Bar -->
+    <div class="alerts-grid">
+        <div class="alert-card alert-card-ktc">
+            <div class="alert-info">
+                <h4>💳 บัตรเครดิต KTC</h4>
+                <p>ตัดรอบบิลทุกวันที่ 25 | กำหนดชำระทุกวันที่ 5 ของเดือน</p>
+            </div>
+            <div class="alert-due">
+                <div class="alert-days">เหลืออีก 11 วัน</div>
+                <div class="alert-amount">ยอดชำระ: ฿2,329.00</div>
+            </div>
+        </div>
+
+        <div class="alert-card alert-card-krungsri">
+            <div class="alert-info">
+                <h4>💳 บัตรเครดิต กรุงศรี (Krungsri)</h4>
+                <p>ตัดรอบบิลทุกวันที่ 10 | กำหนดชำระทุกวันที่ 25 ของเดือน</p>
+            </div>
+            <div class="alert-due">
+                <div class="alert-days" style="color:#facc15;">เหลืออีก 26 วัน</div>
+                <div class="alert-amount">ยอดชำระ: ฿3,950.93</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Summary Grid (Includes Feature #3 DTI Ratio & Feature #6 Buffer Reserve) -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-income">
+            <div class="kpi-header">
+                <span class="kpi-label">รายรับรวม (Gross)</span>
+                <span class="kpi-icon">💵</span>
+            </div>
+            <div class="kpi-value" id="kpiGrossIncome">฿38,120.00</div>
+            <div class="kpi-sub">เงินเดือนเต็มก่อนหัก</div>
+        </div>
+
+        <div class="kpi-card kpi-net">
+            <div class="kpi-header">
+                <span class="kpi-label">เงินรับสุทธิเข้าบัญชี</span>
+                <span class="kpi-icon">💳</span>
+            </div>
+            <div class="kpi-value" id="kpiNetIncome">฿22,060.00</div>
+            <div class="kpi-sub">หลังหัก ธอส./PVD/สหกรณ์</div>
+        </div>
+
+        <div class="kpi-card kpi-expense">
+            <div class="kpi-header">
+                <span class="kpi-label">รวมรายจ่ายประมาณการ</span>
+                <span class="kpi-icon">🛒</span>
+            </div>
+            <div class="kpi-value" id="kpiExpenses">฿16,194.63</div>
+            <div class="kpi-sub" id="kpiExpenseSub">3 เสาหลักรวมกัน</div>
+        </div>
+
+        <!-- Feature #3: Debt-to-Income Indicator Card -->
+        <div class="kpi-card kpi-dti">
+            <div class="kpi-header">
+                <span class="kpi-label">ภาระหนี้บัตร/รายได้สุทธิ (DTI)</span>
+                <span class="kpi-icon">⚖️</span>
+            </div>
+            <div class="kpi-value" id="kpiDtiValue" style="color:#f472b6;">28.47%</div>
+            <div class="kpi-sub" id="kpiDtiStatus">🟢 ระดับปลอดภัย (<30%)</div>
+        </div>
+
+        <!-- Feature #6: Buffer Reserve & Net Savings Card -->
+        <div class="kpi-card kpi-buffer">
+            <div class="kpi-header">
+                <span class="kpi-label">เงินออม & สำรองฉุกเฉิน</span>
+                <span class="kpi-icon">🛡️</span>
+            </div>
+            <div class="kpi-value" id="kpiSurplus">฿5,865.37</div>
+            <div class="kpi-sub" id="kpiBufferInfo">เผื่อฉุกเฉิน Buffer: ฿1,000.00</div>
+        </div>
+    </div>
+
+    <!-- Charts Grid & Feature #1 Progress Bar -->
+    <div class="charts-grid">
+        <!-- Feature #1: Budget vs Actual Progress Bars -->
+        <div class="chart-card col-6">
+            <div class="chart-header">
+                <div class="chart-title">📊 เปรียบเทียบประมาณการ vs จ่ายจริง (Estimate vs Actual Target)</div>
+            </div>
+            <div id="progressBarContainer">
+                <!-- Dynamically Populated -->
+            </div>
+        </div>
+
+        <!-- Cash Flow Doughnut Chart -->
+        <div class="chart-card col-6">
+            <div class="chart-header">
+                <div class="chart-title">🌀 สัดส่วนการกระจายเงินกระแสรายจ่าย (Flow Distribution)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="cashflowChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Payment Channels & Feature #4 Fixed vs Variable -->
+        <div class="chart-card col-6">
+            <div class="chart-header">
+                <div class="chart-title">💳 รายจ่ายตามช่องทางชำระ (Payment Channels)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="channelChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card col-6">
+            <div class="chart-header">
+                <div class="chart-title">⚖️ สัดส่วนรายจ่ายคงที่ (Fixed) vs ผันแปร (Variable)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="natureChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Data Table -->
+    <div class="table-card">
+        <div class="table-toolbar">
+            <h3 style="font-size: 1.05rem; font-weight:600;">📋 ตารางข้อมูลประมาณการรายจ่าย (Single-Sheet Master Table)</h3>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 ค้นหารายการ..." onkeyup="filterTable()">
+                </div>
+                <div class="select-box">
+                    <select id="typeFilter" onchange="filterTable()">
+                        <option value="">ทั้งหมด (All Flow Types)</option>
+                        <option value="รายรับ">รายรับ</option>
+                        <option value="รายการหักสลิป">รายการหักสลิป</option>
+                        <option value="รายจ่าย">รายจ่าย</option>
+                        <option value="เงินออม">เงินออม</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="datasetTable">
+                <thead>
+                    <tr>
+                        <th>รหัส (ID)</th>
+                        <th>งวดเดือน</th>
+                        <th>ประเภท</th>
+                        <th>หมวดหมู่</th>
+                        <th>รายการย่อย</th>
+                        <th>ช่องทางชำระ</th>
+                        <th>จำนวนเงินจริง</th>
+                        <th>งบประมาณการ</th>
+                        <th>ลักษณะ</th>
+                        <th>ความถี่</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>➕ เพิ่มรายการประมาณการรายจ่ายใหม่</h3>
+            <span style="cursor:pointer;" onclick="closeAddModal()">❌</span>
+        </div>
+        <form id="addForm" onsubmit="handleAddSubmit(event)">
+            <div class="form-group">
+                <label>วันที่ (Date)</label>
+                <input type="date" id="mDate" required onchange="document.getElementById('mPeriodMonth').value = this.value.slice(0, 7)">
+            </div>
+            <div class="form-group">
+                <label>รอบเดือน (Period Month)</label>
+                <input type="month" id="mPeriodMonth" required>
+            </div>
+            <div class="form-group">
+                <label>ประเภท (Flow Type)</label>
+                <select id="mType" required onchange="handleTypeChange(this.value)">
+                    <option value="รายจ่าย">รายจ่าย</option>
+                    <option value="รายรับ">รายรับ</option>
+                    <option value="รายการหักสลิป">รายการหักสลิป</option>
+                    <option value="เงินออม">เงินออม</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>หมวดหมู่ (Category)</label>
+                <input type="text" id="mCategory" list="categoryOptions" required placeholder="เลือกหรือพิมพ์หมวดหมู่...">
+                <datalist id="categoryOptions">
+                    <option value="การกินอยู่">
+                    <option value="ส่วนตัว">
+                    <option value="ค่าใช้จ่ายเกี่ยวกับรถ">
+                    <option value="สาธารณูปโภค">
+                    <option value="บ้านและครอบครัว">
+                    <option value="ประกันและสุขภาพ">
+                    <option value="อื่นๆ">
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>รายการย่อย (Sub-Category / Item)</label>
+                <input type="text" id="mSubCategory" required placeholder="เช่น ค่ากาแฟ, ค่าล้างรถ">
+            </div>
+            <div class="form-group" id="groupChannel">
+                <label id="labelChannel">ช่องทางชำระ (Payment Channel / Pillar)</label>
+                <select id="mChannel" required>
+                    <option value="KTC">บัตร KTC (เสาที่ 2)</option>
+                    <option value="Krungsri">บัตรกรุงศรี (เสาที่ 3)</option>
+                    <option value="เงินสด/โอน">เงินสด/โอน (เสาที่ 1 รายจ่ายประจำเดือน)</option>
+                    <option value="หักจากสลิป">หักจากสลิปเงินเดือน</option>
+                    <option value="โอนเข้าบัญชี" id="optIncomeChannel" style="display:none;">โอนเข้าบัญชี</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>จำนวนเงินจ่ายจริง/ประมาณการ (Amount THB)</label>
+                <input type="number" step="0.01" id="mAmount" required placeholder="0.00">
+            </div>
+            <div class="form-group" id="groupTarget">
+                <label>งบประมาณการที่ตั้งไว้ (Budget Target THB)</label>
+                <input type="number" step="0.01" id="mTarget" required placeholder="0.00">
+            </div>
+            <div class="form-group" id="groupNature">
+                <label>ลักษณะรายจ่าย (Nature)</label>
+                <select id="mNature">
+                    <option value="Fixed">Fixed (คงที่ - คุมยาก)</option>
+                    <option value="Variable">Variable (ผันแปร - ประหยัดได้)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">บันทึกรายการ</button>
+        </form>
+    </div>
+</div>
+
+<div class="toast" id="toast">บันทึกสำเร็จ!</div>
+
+<script>
+function handleTypeChange(type) {
+    const groupTarget = document.getElementById('groupTarget');
+    const groupNature = document.getElementById('groupNature');
+    const labelChannel = document.getElementById('labelChannel');
+    const optIncomeChannel = document.getElementById('optIncomeChannel');
+    const mChannel = document.getElementById('mChannel');
+    
+    const headerTitle = document.querySelector('#addModal .modal-header h3');
+    const btnSubmit = document.querySelector('#addModal button[type="submit"]');
+
+    if (type === 'รายจ่าย' || type === 'รายการหักสลิป' || type === 'เงินออม') {
+        groupTarget.style.display = 'block';
+        groupNature.style.display = 'block';
+        labelChannel.innerText = 'ช่องทางชำระ (Payment Channel / Pillar)';
+        optIncomeChannel.style.display = 'none';
+        if (mChannel.value === 'โอนเข้าบัญชี') {
+            mChannel.value = 'เงินสด/โอน';
+        }
+        
+        // Theme: Expense (Red/Blue)
+        headerTitle.style.color = 'var(--danger-red)';
+        btnSubmit.style.background = 'var(--danger-red)';
+        btnSubmit.style.borderColor = 'var(--danger-red)';
+    } else if (type === 'รายรับ') {
+        groupTarget.style.display = 'none';
+        groupNature.style.display = 'none';
+        labelChannel.innerText = 'ช่องทางรับเงิน (Receive Channel)';
+        optIncomeChannel.style.display = 'block';
+        mChannel.value = 'โอนเข้าบัญชี';
+        
+        // Theme: Income (Green)
+        headerTitle.style.color = 'var(--success-green)';
+        btnSubmit.style.background = 'var(--success-green)';
+        btnSubmit.style.borderColor = 'var(--success-green)';
+    }
+}
+</script>
+
+<script>
+    // Initial Dataset extracted from User's uploaded images & 3 Pillars Structure
+    let dataset = [
+        { id: 'TXN-2026-07-001', date: '2026-07-25', period: '2026-07', type: 'รายรับ', category: 'เงินเดือน', sub: 'เงินเดือนประจำ', channel: 'โอนเข้าบัญชี', amount: 38120.00, target: 38120.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-020', date: '2026-07-25', period: '2026-07', type: 'รายการหักสลิป', category: 'ภาษี', sub: 'ภาษีหัก ณ ที่จ่าย', channel: 'หักจากสลิป', amount: 1212.00, target: 1212.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-021', date: '2026-07-25', period: '2026-07', type: 'รายการหักสลิป', category: 'ที่อยู่อาศัย', sub: 'ธนาคารอาคารสงเคราะห์ (ธอส.)', channel: 'หักจากสลิป', amount: 8800.00, target: 8800.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-022', date: '2026-07-25', period: '2026-07', type: 'รายการหักสลิป', category: 'เงินออม/การลงทุน', sub: 'กองทุนสำรองเลี้ยงชีพ (PVD)', channel: 'หักจากสลิป', amount: 1906.00, target: 1906.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-023', date: '2026-07-25', period: '2026-07', type: 'รายการหักสลิป', category: 'สวัสดิการ', sub: 'ประกันสังคม', channel: 'หักจากสลิป', amount: 875.00, target: 875.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-024', date: '2026-07-25', period: '2026-07', type: 'รายการหักสลิป', category: 'เงินออม/หุ้นกู้', sub: 'สหกรณ์ ศธ.', channel: 'หักจากสลิป', amount: 3267.00, target: 3267.00, nature: 'Fixed', freq: 'รายเดือน' },
+        // Pillar 2: KTC
+        { id: 'TXN-2026-07-030', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ความบันเทิง/บริการ', sub: 'apple', channel: 'KTC', amount: 99.00, target: 100.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-031', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ของใช้ในบ้าน', sub: 'ของใช้โลตัสประจำเดือน', channel: 'KTC', amount: 2000.00, target: 2000.00, nature: 'Variable', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-032', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ค่าใช้จ่ายเกี่ยวกับรถ', sub: 'ค่าไฟรถ EV', channel: 'KTC', amount: 230.00, target: 300.00, nature: 'Variable', freq: 'รายเดือน' },
+        // Pillar 3: Krungsri
+        { id: 'TXN-2026-07-040', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'สาธารณูปโภค', sub: 'ค่าโทรศัพท์รายเดือน', channel: 'Krungsri', amount: 1200.00, target: 1200.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-041', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'สาธารณูปโภค', sub: 'ค่า Internet รายเดือน', channel: 'Krungsri', amount: 640.93, target: 650.00, nature: 'Fixed', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-042', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'สาธารณูปโภค', sub: 'ค่าไฟฟ้า', channel: 'Krungsri', amount: 1200.00, target: 1000.00, nature: 'Variable', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-043', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'สาธารณูปโภค', sub: 'ค่าน้ำ', channel: 'Krungsri', amount: 160.00, target: 200.00, nature: 'Variable', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-044', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ความบันเทิง/บริการ', sub: 'Claude AI รายเดือน', channel: 'Krungsri', amount: 750.00, target: 750.00, nature: 'Fixed', freq: 'รายเดือน' },
+        // Pillar 1: Monthly General Expenses & Amortized
+        { id: 'TXN-2026-07-050', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ที่อยู่อาศัย', sub: 'ค่าส่วนกลางรายเดือน', channel: 'เงินสด/โอน', amount: 1000.00, target: 1000.00, nature: 'Fixed', freq: 'รายปีหารเฉลี่ย' },
+        { id: 'TXN-2026-07-051', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ค่าใช้จ่ายเกี่ยวกับรถ', sub: 'ค่าบำรุงรักษารถ', channel: 'เงินสด/โอน', amount: 208.00, target: 250.00, nature: 'Variable', freq: 'รายปีหารเฉลี่ย' },
+        { id: 'TXN-2026-07-052', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ค่าใช้จ่ายเกี่ยวกับรถ', sub: 'ค่าภาษีรถ และ พรบ.', channel: 'เงินสด/โอน', amount: 83.30, target: 100.00, nature: 'Fixed', freq: 'รายปีหารเฉลี่ย' },
+        { id: 'TXN-2026-07-053', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ค่าใช้จ่ายเกี่ยวกับรถ', sub: 'ค่าประกันภัยรถยนต์ชั้น 1', channel: 'เงินสด/โอน', amount: 2083.33, target: 2100.00, nature: 'Fixed', freq: 'รายปีหารเฉลี่ย' },
+        { id: 'TXN-2026-07-060', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'การกินอยู่', sub: 'ค่าอาหารประจำเดือน', channel: 'เงินสด/โอน', amount: 5400.00, target: 6000.00, nature: 'Variable', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-061', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ส่วนตัว', sub: 'รายจ่ายส่วนตัวประจำเดือน', channel: 'เงินสด/โอน', amount: 1000.00, target: 1500.00, nature: 'Variable', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-062', date: '2026-07-25', period: '2026-07', type: 'รายจ่าย', category: 'ค่าใช้จ่ายเกี่ยวกับรถ', sub: 'ค่าล้างรถ', channel: 'เงินสด/โอน', amount: 140.00, target: 200.00, nature: 'Variable', freq: 'รายเดือน' },
+        { id: 'TXN-2026-07-070', date: '2026-07-25', period: '2026-07', type: 'เงินออม', category: 'เงินออม/สำรอง', sub: 'เงินออมและสำรองฉุกเฉิน', channel: 'เงินโอนสะสม', amount: 5865.37, target: 5865.37, nature: 'Fixed', freq: 'รายเดือน' }
+    ];
+
+    let activePillar = 'ALL';
+    let charts = {};
+
+    function init() {
+        updateDashboard();
+    }
+
+    function selectPillar(pillar) {
+        activePillar = pillar;
+        document.querySelectorAll('.pillar-btn').forEach(btn => btn.classList.remove('active'));
+        if (pillar === 'ALL') document.getElementById('btnPillarAll').classList.add('active');
+        else if (pillar === 'MONTHLY') document.getElementById('btnPillar1').classList.add('active');
+        else if (pillar === 'KTC') document.getElementById('btnPillar2').classList.add('active');
+        else if (pillar === 'KRUNGSRI') document.getElementById('btnPillar3').classList.add('active');
+
+        updateDashboard();
+    }
+
+    function getFilteredData() {
+        if (activePillar === 'KTC') return dataset.filter(d => d.channel === 'KTC' || d.type === 'รายรับ');
+        if (activePillar === 'KRUNGSRI') return dataset.filter(d => d.channel === 'Krungsri' || d.type === 'รายรับ');
+        if (activePillar === 'MONTHLY') return dataset.filter(d => d.channel === 'เงินสด/โอน' || d.type === 'รายรับ');
+        return dataset;
+    }
+
+    function updateDashboard() {
+        populateCategoryOptions();
+        calculateKPIs();
+        renderProgressBars();
+        renderTable();
+        renderCharts();
+    }
+
+    function populateCategoryOptions() {
+        const masterCategories = [
+            "เงินเดือน", "ที่อยู่อาศัย", "เงินออม/การลงทุน", 
+            "เงินออม/หุ้นกู้", "ความบันเทิง/บริการ", 
+            "ของใช้ในบ้าน", "ค่าใช้จ่ายเกี่ยวกับรถ", "สาธารณูปโภค", 
+            "การกินอยู่", "ส่วนตัว", "เงินออม/สำรอง", "อื่นๆ"
+        ];
+        const catList = document.getElementById('categoryOptions');
+        if (catList) {
+            catList.innerHTML = '';
+            masterCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                catList.appendChild(opt);
+            });
+        }
+    }
+
+    function calculateKPIs() {
+        let currentData = getFilteredData();
+        let grossIncome = dataset.filter(d => d.type === 'รายรับ').reduce((sum, d) => sum + d.amount, 0);
+        let netIncome = grossIncome - dataset.filter(d => d.type === 'รายการหักสลิป').reduce((sum, d) => sum + d.amount, 0);
+
+        let expenses = currentData.filter(d => d.type === 'รายจ่าย').reduce((sum, d) => sum + d.amount, 0);
+        let totalAllExpenses = dataset.filter(d => d.type === 'รายจ่าย').reduce((sum, d) => sum + d.amount, 0);
+        let surplus = netIncome - totalAllExpenses;
+
+        // Debt-to-income (Feature #3)
+        let totalCreditCardDebt = dataset.filter(d => d.channel === 'KTC' || d.channel === 'Krungsri').reduce((sum, d) => sum + d.amount, 0);
+        let dti = netIncome > 0 ? (totalCreditCardDebt / netIncome) * 100 : 0;
+
+        document.getElementById('kpiGrossIncome').innerText = `฿${grossIncome.toLocaleString('th-TH', {minimumFractionDigits: 2})}`;
+        document.getElementById('kpiNetIncome').innerText = `฿${netIncome.toLocaleString('th-TH', {minimumFractionDigits: 2})}`;
+        document.getElementById('kpiExpenses').innerText = `฿${expenses.toLocaleString('th-TH', {minimumFractionDigits: 2})}`;
+        document.getElementById('kpiSurplus').innerText = `฿${surplus.toLocaleString('th-TH', {minimumFractionDigits: 2})}`;
+
+        // DTI Update
+        const dtiElem = document.getElementById('kpiDtiValue');
+        const dtiStatus = document.getElementById('kpiDtiStatus');
+        dtiElem.innerText = `${dti.toFixed(2)}%`;
+        if (dti < 30) {
+            dtiElem.style.color = '#34d399';
+            dtiStatus.innerText = `🟢 สุขภาพดีมาก (<30%) | ยอดบัตร ฿${totalCreditCardDebt.toLocaleString()}`;
+        } else if (dti <= 40) {
+            dtiElem.style.color = '#facc15';
+            dtiStatus.innerText = `🟡 เริ่มเฝ้าระวัง (30-40%) | ยอดบัตร ฿${totalCreditCardDebt.toLocaleString()}`;
+        } else {
+            dtiElem.style.color = '#f87171';
+            dtiStatus.innerText = `🔴 เกินเกณฑ์เสี่ยง (>40%) | ยอดบัตร ฿${totalCreditCardDebt.toLocaleString()}`;
+        }
+
+        if (activePillar === 'ALL') {
+            document.getElementById('kpiExpenseSub').innerText = 'รวม 3 เสาหลัก';
+        } else if (activePillar === 'MONTHLY') {
+            document.getElementById('kpiExpenseSub').innerText = 'เฉพาะเสาที่ 1 (รายจ่ายประจำเดือน)';
+        } else if (activePillar === 'KTC') {
+            document.getElementById('kpiExpenseSub').innerText = 'เฉพาะเสาที่ 2 (บัตร KTC)';
+        } else if (activePillar === 'KRUNGSRI') {
+            document.getElementById('kpiExpenseSub').innerText = 'เฉพาะเสาที่ 3 (บัตรกรุงศรี)';
+        }
+    }
+
+    // Feature #1: Budget vs Actual Progress Bar Component
+    function renderProgressBars() {
+        const container = document.getElementById('progressBarContainer');
+        container.innerHTML = '';
+
+        let expItems = getFilteredData().filter(d => d.type === 'รายจ่าย');
+        let grouped = {};
+
+        expItems.forEach(d => {
+            if (!grouped[d.category]) grouped[d.category] = { amount: 0, target: 0 };
+            grouped[d.category].amount += d.amount;
+            grouped[d.category].target += d.target;
+        });
+
+        Object.keys(grouped).forEach(cat => {
+            let item = grouped[cat];
+            let percent = item.target > 0 ? (item.amount / item.target) * 100 : 100;
+            let barColor = '#10b981';
+            if (percent > 100) barColor = '#ef4444';
+            else if (percent > 85) barColor = '#f59e0b';
+
+            const div = document.createElement('div');
+            div.className = 'progress-item';
+            div.innerHTML = `
+                <div class="progress-info">
+                    <span><strong>${cat}</strong> (จ่ายจริง: ฿${item.amount.toLocaleString()} / งบ: ฿${item.target.toLocaleString()})</span>
+                    <span style="color:${barColor}; font-weight:600;">${percent.toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: ${Math.min(percent, 100)}%; background: ${barColor};"></div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const typeFilter = document.getElementById('typeFilter').value;
+        let currentData = getFilteredData();
+
+        currentData.forEach((item, index) => {
+            if (typeFilter && item.type !== typeFilter) return;
+            if (search && !item.sub.toLowerCase().includes(search) && !item.category.toLowerCase().includes(search)) return;
+
+            let badgeClass = 'badge-expense';
+            if (item.type === 'รายรับ') badgeClass = 'badge-income';
+            else if (item.type === 'รายการหักสลิป') badgeClass = 'badge-deduction';
+            else if (item.type === 'เงินออม') badgeClass = 'badge-saving';
+
+            let channelBadge = 'badge-cash';
+            if (item.channel === 'KTC') channelBadge = 'badge-ktc';
+            else if (item.channel === 'Krungsri') channelBadge = 'badge-krungsri';
+            else if (item.channel === 'หักจากสลิป') channelBadge = 'badge-payroll';
+
+            let natureBadge = item.nature === 'Fixed' ? 'badge-fixed' : 'badge-variable';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><code>${item.id}</code></td>
+                <td>${item.period}</td>
+                <td><span class="badge ${badgeClass}">${item.type}</span></td>
+                <td>${item.category}</td>
+                <td><strong>${item.sub}</strong></td>
+                <td><span class="badge ${channelBadge}">${item.channel}</span></td>
+                <td style="font-weight:600; text-align:right;">฿${item.amount.toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
+                <td style="color:var(--text-muted); text-align:right;">฿${(item.target || item.amount).toLocaleString('th-TH', {minimumFractionDigits: 2})}</td>
+                <td><span class="badge ${natureBadge}">${item.nature}</span></td>
+                <td>${item.freq}</td>
+                <td>
+                    <button class="btn" style="padding:0.2rem 0.5rem; font-size:0.75rem; color:#ef4444;" onclick="deleteRow(${index})">🗑️ ลบ</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderCharts() {
+        Object.values(charts).forEach(c => c.destroy());
+        let currentData = getFilteredData();
+
+        let deductions = dataset.filter(d => d.type === 'รายการหักสลิป').reduce((sum, d) => sum + d.amount, 0);
+        let expenses = currentData.filter(d => d.type === 'รายจ่าย').reduce((sum, d) => sum + d.amount, 0);
+        let surplus = dataset.filter(d => d.type === 'เงินออม').reduce((sum, d) => sum + d.amount, 0);
+
+        // 1. Cash Flow Chart
+        const ctx1 = document.getElementById('cashflowChart').getContext('2d');
+        charts.cashflow = new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['รายการหักสลิป', 'รายจ่ายประมาณการ', 'เงินออมคงเหลือ'],
+                datasets: [{
+                    data: [deductions, expenses, surplus],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#a855f7'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Prompt' } } } }
+            }
+        });
+
+        // 2. Payment Channels Chart
+        const chanMap = {};
+        currentData.filter(d => d.type === 'รายจ่าย').forEach(d => {
+            chanMap[d.channel] = (chanMap[d.channel] || 0) + d.amount;
+        });
+
+        const ctx3 = document.getElementById('channelChart').getContext('2d');
+        charts.channel = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(chanMap),
+                datasets: [{
+                    data: Object.values(chanMap),
+                    backgroundColor: ['#ec4899', '#eab308', '#3b82f6', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Prompt' } } } }
+            }
+        });
+
+        // 3. Fixed vs Variable Chart (Feature #4)
+        let fixedAmt = currentData.filter(d => d.type === 'รายจ่าย' && d.nature === 'Fixed').reduce((sum, d) => sum + d.amount, 0);
+        let varAmt = currentData.filter(d => d.type === 'รายจ่าย' && d.nature === 'Variable').reduce((sum, d) => sum + d.amount, 0);
+
+        const ctx4 = document.getElementById('natureChart').getContext('2d');
+        charts.nature = new Chart(ctx4, {
+            type: 'doughnut',
+            data: {
+                labels: ['Fixed (คงที่ - คุมยาก)', 'Variable (ผันแปร - ประหยัดได้)'],
+                datasets: [{
+                    data: [fixedAmt, varAmt],
+                    backgroundColor: ['#3b82f6', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#94a3b8', font: { family: 'Prompt' } } } }
+            }
+        });
+    }
+
+    function filterTable() { renderTable(); }
+
+    function deleteRow(index) {
+        if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
+            dataset.splice(index, 1);
+            updateDashboard();
+            showToast('ลบรายการเรียบร้อยแล้ว');
+        }
+    }
+
+    function openAddModal() { 
+        document.getElementById('addModal').style.display = 'flex'; 
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('mDate').value = today;
+        document.getElementById('mPeriodMonth').value = today.slice(0, 7);
+        handleTypeChange(document.getElementById('mType').value); // Trigger theme
+    }
+    function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+
+    function handleAddSubmit(e) {
+        e.preventDefault();
+        const date = document.getElementById('mDate').value;
+        const period = document.getElementById('mPeriodMonth').value;
+        const type = document.getElementById('mType').value;
+        const category = document.getElementById('mCategory').value;
+        const sub = document.getElementById('mSubCategory').value;
+        const channel = document.getElementById('mChannel').value;
+        const amount = parseFloat(document.getElementById('mAmount').value);
+        const target = parseFloat(document.getElementById('mTarget').value) || amount;
+        const nature = document.getElementById('mNature') ? document.getElementById('mNature').value : 'Variable';
+
+        const submitBtn = document.querySelector('#addForm button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'กำลังบันทึก...';
+        
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxw75POwKB2uuNoy_ShgSeu8urq32NfcF1f3aD6l6eyvy1Gi3h9s9_2WqBMtgTF2IKW8w/exec';
+        
+        const rowData = {
+            transaction_id: `TXN-${new Date().getTime()}`,
+            date: date,
+            period_month: period,
+            flow_type: type,
+            category: category,
+            sub_category: sub,
+            payment_channel: channel,
+            amount: amount,
+            budget_target: target,
+            expense_nature: nature,
+            frequency_type: 'รายเดือน',
+            note: 'Added from Dashboard'
+        };
+
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(rowData)
+        }).then(() => {
+            showToast('บันทึกลง Google Sheets เรียบร้อยแล้ว!');
+            closeAddModal();
+            document.getElementById('addForm').reset();
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'บันทึกรายการ';
+        }).catch(err => {
+            alert('Error: ' + err);
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'บันทึกรายการ';
+        });
+    }
+
+    function exportCSV() {
+        let headers = ['transaction_id', 'date', 'period_month', 'flow_type', 'category', 'sub_category', 'payment_channel', 'amount', 'budget_target', 'expense_nature', 'frequency_type'];
+        let csvRows = [headers.join(',')];
+
+        dataset.forEach(item => {
+            let row = [
+                item.id, item.date, item.period, `"${item.type}"`, `"${item.category}"`, `"${item.sub}"`, `"${item.channel}"`, item.amount, item.target || item.amount, item.nature, `"${item.freq}"`
+            ];
+            csvRows.push(row.join(','));
+        });
+
+        let csvString = "\uFEFF" + csvRows.join("\n");
+        let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        let url = URL.createObjectURL(blob);
+        let link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `personal_finance_3pillars_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('ดาวน์โหลด CSV สำเร็จ!');
+    }
+
+    function importCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const lines = text.split('\n');
+            let newDataset = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+                if (cols.length >= 8) {
+                    newDataset.push({
+                        id: cols[0] || `TXN-${i}`, date: cols[1] || '2026-07-25', period: cols[2] || '2026-07', type: cols[3] || 'รายจ่าย', category: cols[4] || 'ทั่วไป', sub: cols[5] || 'รายการ', channel: cols[6] || 'เงินสด/โอน', amount: parseFloat(cols[7]) || 0, target: parseFloat(cols[8]) || parseFloat(cols[7]) || 0, nature: cols[9] || 'Variable', freq: cols[10] || 'รายเดือน'
+                    });
+                }
+            }
+
+            if (newDataset.length > 0) {
+                dataset = newDataset;
+                updateDashboard();
+                showToast('นำเข้าข้อมูล CSV สำเร็จ!');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
